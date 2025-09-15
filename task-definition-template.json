@@ -1,0 +1,44 @@
+{
+  "family": "node-api-task-defination",
+  "networkMode": "awsvpc",
+  "executionRoleArn": "arn:aws:iam::455948814335:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "node-api",
+      "image": "${IMAGE_NAME}",
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 80,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "logConfiguration": {
+          "logDriver": "awslogs",
+          "secretOptions": [],
+          "options": {
+              "awslogs-group": "/ecs/node-api-task-defination",
+              "awslogs-region": "us-east-1",
+              "awslogs-stream-prefix": "ecs"
+            }
+      },
+      "secrets": [],
+        "environment": [
+         {
+            "name": "NODE_ENV",
+            "value": "ecs-uat"
+          },
+          {
+            "name": "PORT",
+            "value": "80"
+          }
+        ]
+    }
+  ],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "256",
+  "memory": "512"
+}

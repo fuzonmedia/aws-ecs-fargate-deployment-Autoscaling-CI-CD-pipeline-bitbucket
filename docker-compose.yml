@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+   #node service
+   gamapi:
+     build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NPM_TOKEN: {{token}}
+        PORT: 3002
+     image: fuzonmedia/gamapi  
+     restart: unless-stopped
+     ports:
+       - "3002:3002"
+     volumes:
+       - ./app/:/app
+       #- /app/node_modules
+     environment:
+      - NODE_ENV=ecs-uat
+      - PORT=3002
+     working_dir: /app
+     container_name: gamapi
+     networks:
+       - nginx-proxy
+
+networks:
+  nginx-proxy:
+    external: true
+
+
+

@@ -1,0 +1,60 @@
+image:
+  name: atlassian/default-image:3
+  
+pipelines:
+  default:
+    - step:
+        name: Build and publish docker image.
+        services:
+          - docker # Enable Docker for your repository
+        script:
+            - add-apt-repository universe
+            - apt-get update
+            - apt install -y python3-pip
+            - pip3 install awscli
+            - IMAGE="${AWS_ECR_IMAGE}"
+            - TAG="${BITBUCKET_BUILD_NUMBER}"
+            - aws configure set aws_access_key_id "${AWS_ACCESS_KEY_ID}"
+            - aws configure set aws_secret_access_key "${AWS_SECRET_ACCESS_KEY}"
+            - eval $(aws ecr get-login --no-include-email --region "${AWS_DEFAULT_REGION}" | sed 's;https://;;g')
+            - docker build -t $IMAGE:$TAG --build-arg NPM_TOKEN="${NODE_NPM_TOKEN}" --build-arg PORT="${NODE_PORT}" . 
+            - docker push $IMAGE:$TAG
+
+
+    - step:
+        name: Deploy to ECS in Staging Environment 
+        deployment: staging #manual trigger
+        trigger: manual
+        script:
+          # Replace the docker image name in the task definition with the newly pushed image.
+          - export IMAGE_NAME="${AWS_ECR_IMAGE}:${BITBUCKET_BUILD_NUMBER}"
+          - envsubst < task-definition-template.json >  task-definition.json
+
+          # Update the task definition.
+          - pipe: atlassian/aws-ecs-deploy:1.0.0
+            variables:
+              AWS_ACCESS_KEY_ID: $ECS_AWS_ACCESS_KEY_ID
+              AWS_SECRET_ACCESS_KEY: $ECS_AWS_SECRET_ACCESS_KEY
+              AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+              CLUSTER_NAME: 'gam-rest-uat'
+              SERVICE_NAME: 'node-api-service'
+              TASK_DEFINITION: 'task-definition.json'     
+
+    - step:
+        name: Deploy to ECS in Production Environment 
+        deployment: production #manual trigger
+        trigger: manual
+        script:
+          # Replace the docker image name in the task definition with the newly pushed image.
+          - export IMAGE_NAME="${AWS_ECR_IMAGE}:${AWS_ECR_PRODUCTION_IMAGE_TAG}"
+          - envsubst < task-definition-production-template.json >  task-definition.json
+
+          # Update the task definition.
+          - pipe: atlassian/aws-ecs-deploy:1.0.0
+            variables:
+              AWS_ACCESS_KEY_ID: $ECS_AWS_ACCESS_KEY_ID
+              AWS_SECRET_ACCESS_KEY: $ECS_AWS_SECRET_ACCESS_KEY
+              AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+              CLUSTER_NAME: 'gam-rest-production'
+              SERVICE_NAME: 'node-api-production-service'
+              TASK_DEFINITION: 'task-definition.json' 
