@@ -110,13 +110,13 @@ pipelines:
 
 📊 Deployment Flow
 
--- flowchart TD
---  A[Bitbucket Commit] --> B[Build & Push Docker Image]
---  B -->|ECR| C[Amazon Elastic Container Registry]
---  C --> D[Staging Deployment Manual Trigger]
---  D -->|Update Task Definition| E[AWS ECS Staging Service]
---  C --> F[Production Deployment Manual Trigger]
---  F -->|Update Task Definition| G[AWS ECS Production Service]
+- flowchart TD
+-  A[Bitbucket Commit] --> B[Build & Push Docker Image]
+-  B -->|ECR| C[Amazon Elastic Container Registry]
+-  C --> D[Staging Deployment Manual Trigger]
+-  D -->|Update Task Definition| E[AWS ECS Staging Service]
+-  C --> F[Production Deployment Manual Trigger]
+-  F -->|Update Task Definition| G[AWS ECS Production Service]
 
 <img width="1193" height="367" alt="image" src="https://github.com/user-attachments/assets/3a9bb13f-d65c-4c5d-bbdf-c1f7c0f4cd1c" />
 <img width="1041" height="717" alt="image" src="https://github.com/user-attachments/assets/2bd4d825-2b8d-470c-be12-3e10401cbcb2" />
